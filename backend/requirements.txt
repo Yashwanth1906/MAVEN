@@ -6,3 +6,5 @@ langchain
 langchain-community
 dotenv
 ag2[openai]
+prisma
+prisma-client
