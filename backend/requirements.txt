@@ -4,3 +4,5 @@ manim
 autogen
 langchain
 langchain-community
+dotenv
+ag2[openai]
