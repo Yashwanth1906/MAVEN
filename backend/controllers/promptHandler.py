@@ -1,10 +1,13 @@
 from agents.promptingAgent import user_proxy,prompting_agent
 from agents.manimCodeGeneratingAgent import manim_code_generating_agent
 import os,re,subprocess
+from schemas import UserPrompt,HistoryCreate,SaveChat
+from controllers.chatHIstoryHandler import create_chatHistory,saveChat
+from datetime import datetime
 
-def handle_user_query(data):
-    prompt = data["prompt"]
-    
+
+async def handle_user_query(data : UserPrompt):
+    prompt = data.prompt
     user_proxy.send(
         recipient=prompting_agent,
         message=f"""
@@ -44,7 +47,34 @@ def handle_user_query(data):
             manim_file.write(cleaned_string)
         command = f"manim -pql manimcode\{class_name}.py {class_name}"
         subprocess.run(command,shell=True)
-
-        return [manim_prompt, cleaned_string]
+        historyId = data.historyId
+        userId = data.userId
+        if historyId == None:
+            newHistoryPayload = {
+                "userId" : userId,
+                "title" : class_name,
+                "timestamp" : datetime.utcnow().isoformat() + 'z'
+            }
+            response =await create_chatHistory(HistoryCreate(**newHistoryPayload))
+            if response[0] == False:
+                return response
+            historyId= response[1].id
+        chatPayload = {
+            "role" : "User",
+            "content" : prompt,
+            "historyId" : historyId
+        }
+        chat = await saveChat(SaveChat(**chatPayload))
+        if chat[0] == False:
+            return response
+        chatPayload = {
+            "role" : "AIAssistant",
+            "content" : cleaned_string,
+            "historyId" : historyId
+        }
+        chat =await saveChat(SaveChat(**chatPayload))
+        if chat[0] == False:
+            return response
+        return [True,cleaned_string]
     else:
         return [None, "Class name extraction failed."]

@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider = "prisma-client-py"
 }
 
 datasource db {
@@ -9,18 +8,31 @@ datasource db {
 }
 
 model User {
-  id Int @unique @default(autoincrement())
-  name String
-  email String
+  id       Int       @id @default(autoincrement()) @unique
+  name     String
+  email    String
   password String
-  history History[]
+  history  History[]
 }
 
 model History {
-  id Int @unique @default(autoincrement())
-  userId Int
-  user User @relation(fields: [userId],onDelete: Cascade,references: [id])
-  title String
-  timestamp DateTime @default(now())
+  id        Int       @id @default(autoincrement()) @unique
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  timestamp DateTime  @default(now())
+  chats     Chat[]
 }
 
+model Chat {
+  id         Int      @id @default(autoincrement()) @unique
+  role       Role
+  content    String
+  historyId  Int
+  history    History  @relation(fields: [historyId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  User
+  AIAssistant
+}

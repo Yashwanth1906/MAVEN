@@ -1,10 +1,11 @@
-from fastapi import FastAPI,Request
+from fastapi import FastAPI,Request, Body
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from controllers.promptHandler import handle_user_query
 from prisma import Prisma
-from schemas import UserCreate,HistoryCreate
-
+from controllers.chatHIstoryHandler import create_chatHistory,saveChat
+from controllers.userHandler import createUser,userLogin
+from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt
 
 app = FastAPI()
 
@@ -36,22 +37,46 @@ async def startup():
 async def shutdown():
     await db.disconnect()
 
-@app.post("/api/users/signup")
-async def create_user(user: UserCreate):
-    pass
-
-@app.post("/api/users/createhistory")
-async def add_history(user_id: int, history: HistoryCreate):
-    pass
-
 @app.get("/")
 def read_root():
     return {"sucess" : True,"message": "running on port 8000"}
 
+@app.post("/api/users/signup")
+async def create_user(user : UserCreate = Body(...)):
+    response = await createUser(user)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
+
+@app.post("/api/users/createhistory")
+async def add_history(chatHistory : HistoryCreate = Body(...)):
+    response = await create_chatHistory(chatHistory)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
+
+@app.post("/api/savechat")
+async def save_chat(chat : SaveChat = Body(...)):
+    response = await saveChat(chat)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
+
+@app.post("/api/users/login")
+async def user_login(user : UserLogin = Body(...)):
+    response = await userLogin(user)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
+
 @app.post("/api/userprompt")
-async def process_user_query (req : Request):
-    data = await req.json()
-    if data != {}:
-        response = handle_user_query(data)
-        return JSONResponse(content={"status" : True, "prompt" : response[0], "code" : response[1]})
-    return JSONResponse(content={"status" : False , "message" : "Please enter the prompt"})
+async def process_user_query (prompt : UserPrompt = Body(...)):
+    response = await handle_user_query(prompt)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
