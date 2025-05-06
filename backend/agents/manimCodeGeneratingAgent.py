@@ -1,4 +1,3 @@
-from agents.promptingAgent import user_proxy
 from autogen import AssistantAgent
 from utils import llm_config
 
