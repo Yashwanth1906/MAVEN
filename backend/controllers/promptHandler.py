@@ -110,7 +110,13 @@ async def handle_user_query_new_chat(data : UserPrompt):
         return chat
     # DB Interactions ends..
 
-    return [True,cleaned_code]
+    newHistory = {
+        "id" : response[1].id,
+        "title" : response[1].title,
+        "timestamp" : response[1].timestamp.isoformat()
+    }
+
+    return [True,cleaned_code,newHistory]
 
 
 async def handle_user_query_old(data : UserPrompt):

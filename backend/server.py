@@ -1,11 +1,12 @@
 from fastapi import FastAPI,Request, Body
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse,FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from controllers.promptHandler import handle_user_query_new_chat,handle_user_query_old
 from prisma import Prisma
-from controllers.chatHIstoryHandler import create_chatHistory,saveChat
+from controllers.chatHIstoryHandler import create_chatHistory,saveChat,get_chats
 from controllers.userHandler import createUser,userLogin,getHistory
 from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt,GetHistory
+import os
 
 app = FastAPI()
 
@@ -82,6 +83,9 @@ async def process_user_query (prompt : UserPrompt = Body(...)):
     if response[0] == False:
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:
+        if len(response) == 3:
+            print(response[2])
+            return JSONResponse(content={"success" : True,"message" : response[1],"history" : response[2]})
         return JSONResponse(content={"success" : True, "message" : response[1]})
     
 @app.post("/api/users/gethistory")
@@ -91,3 +95,19 @@ async def get_history(req : GetHistory = Body(...)):
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:
         return JSONResponse(content={"success" : True, "message" : response[1]})
+
+@app.get("/preview/{filename}")
+def get_video_preview(filename: str):
+    file_dir = "C:\\Documents\\Projects\\Video Generator\\Backend\\media\\videos"
+    file_path = os.path.join(file_dir,filename,"480p15",f"{filename}.mp4")
+    if not os.path.exists(file_path):
+        return {"error": "File not found"}
+    return FileResponse(file_path, media_type="video/mp4")
+
+@app.get("/api/users/getchat/{historyId}")
+def getChatHistory(historyId : int):
+    response = get_chats(historyId)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "chats" : response[1]})
