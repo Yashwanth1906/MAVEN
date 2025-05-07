@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from controllers.promptHandler import handle_user_query_new_chat,handle_user_query_old
 from prisma import Prisma
 from controllers.chatHIstoryHandler import create_chatHistory,saveChat
-from controllers.userHandler import createUser,userLogin
-from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt
+from controllers.userHandler import createUser,userLogin,getHistory
+from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt,GetHistory
 
 app = FastAPI()
 
@@ -79,6 +79,14 @@ async def process_user_query (prompt : UserPrompt = Body(...)):
         response = await handle_user_query_new_chat(prompt)
     else:
         response = await handle_user_query_old(prompt)
+    if response[0] == False:
+        return JSONResponse(content={"success" : False, "error" : response[1]})
+    else:
+        return JSONResponse(content={"success" : True, "message" : response[1]})
+    
+@app.post("/api/users/gethistory")
+async def get_history(req : GetHistory = Body(...)):
+    response =await getHistory(req)
     if response[0] == False:
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:

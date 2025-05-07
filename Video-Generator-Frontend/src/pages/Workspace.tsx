@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Menu, Share2, User, Code2, X, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,18 +16,41 @@ export function Workspace() {
   const [sampleCode,setSampleCode] = useState<string | null>(null);
   const [preview,setPreview] = useState("");
   const [history,setHistory] = useState<HistoryItem[] | null>(null);
-  
+
   const generateVideo = async() =>{
+    let userId = localStorage.getItem("userId");
+    if(userId === null) {
+      userId = "5"
+    }
     await axios.post(`${BACKEND_URL}/api/userprompt`,{
-        "prompt" : prompt
+        "prompt" : prompt,
+        "userId" : parseInt(userId)
     }).then((res : any)=>{
-        console.log(res.data.code);
-        setSampleCode(res.data.code);
+        console.log(res.data.message);
+        setSampleCode(res.data.message);
         setPrompt("");
     }).catch((err : any)=>{
         alert(err)
     })
   }
+
+  const getHistory = async()=>{
+    let userId = localStorage.getItem("userId");
+    if(userId === null) {
+      userId = "5"
+    }
+    await axios.post(`${BACKEND_URL}/api/users/gethistory`,{
+      "userId" : parseInt(userId)
+    }).then((res : any)=>{
+      console.log(res.data);
+      setHistory(res.data.message);
+    }).catch((err)=>{
+      alert(err.message)
+    })
+  }
+  useEffect(()=>{
+    getHistory();
+  },[])
   
   return (
     <div className="h-screen flex flex-col bg-background">

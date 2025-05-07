@@ -32,3 +32,6 @@ class UserPrompt(BaseModel):
     prompt : str
     historyId : Optional[int] = None
     userId : int
+
+class GetHistory(BaseModel):
+    userId : int
