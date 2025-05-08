@@ -18,7 +18,7 @@ Guidelines:
 - Respect the logic and sequence given in the animation prompt.
 - Use only valid color constants provided by Manim such as `BLUE`, `RED`, `GREEN`, `LIGHT_GRAY`, `BLACK`, etc. Do NOT use lowercase or undefined colors like `light_blue`, `gray`, etc.
 - Position elements using `.move_to()` or positioning helpers like `LEFT`, `RIGHT`, `UP`, `DOWN`, `ORIGIN`.
-
+- Don't use any third party dependencies 
 Output Format:
 -------------
 Return only:
