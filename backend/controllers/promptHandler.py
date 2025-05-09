@@ -43,7 +43,7 @@ async def handle_user_query_new_chat(data : UserPrompt):
         return [None, None]
     class_name = class_name_match.group(1)
     cleaned_code = re.sub(r"manim -pql \S+\.py \S+", "", cleaned_code).strip()
-    file_dir = "C:\\Documents\\Projects\\Video Generator\\Backend\\manimcode"
+    file_dir = "C:\\Documents\\Projects\\MAVEN\\Backend\\manimcode"
     os.makedirs(file_dir, exist_ok=True)
     file_path = os.path.join(file_dir, f"{class_name}.py")
     
@@ -160,7 +160,7 @@ async def handle_user_query_old(data : UserPrompt):
         return [None, None]
     class_name = class_name_match.group(1)
     cleaned_code = re.sub(r"manim -pql \S+\.py \S+", "", cleaned_code).strip()
-    file_dir = "C:\\Documents\\Projects\\Video Generator\\Backend\\manimcode"
+    file_dir = "C:\\Documents\\Projects\\MAVEN\\Backend\\manimcode"
     os.makedirs(file_dir, exist_ok=True)
     file_path = os.path.join(file_dir, f"{class_name}.py")
     

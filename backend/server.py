@@ -98,7 +98,7 @@ async def get_history(req : GetHistory = Body(...)):
 
 @app.get("/preview/{filename}")
 def get_video_preview(filename: str):
-    file_dir = "C:\\Documents\\Projects\\Video Generator\\Backend\\media\\videos"
+    file_dir = "C:\\Documents\\Projects\\MAVEN\\Backend\\media\\videos"
     file_path = os.path.join(file_dir,filename,"480p15",f"{filename}.mp4")
     if not os.path.exists(file_path):
         return {"error": "File not found"}
