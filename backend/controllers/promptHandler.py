@@ -10,7 +10,6 @@ from prisma import Prisma
 from prisma.errors import PrismaError
 from prisma.enums import Role
 
-
 async def handle_user_query_new_chat(data : UserPrompt):
     prompt = data.prompt
     user_proxy.send(
