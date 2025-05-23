@@ -1,5 +1,5 @@
 fastapi 
-uvicorn
+uvicorn[standard]
 manim
 autogen
 langchain
@@ -7,3 +7,4 @@ langchain-community
 dotenv
 ag2[openai]
 prisma
+redis

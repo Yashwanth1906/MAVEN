@@ -1,12 +1,15 @@
-from fastapi import FastAPI,Request, Body
+from fastapi import FastAPI,Request, Body, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse,FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from controllers.promptHandler import handle_user_query_new_chat,handle_user_query_old
 from prisma import Prisma
 from controllers.chatHIstoryHandler import create_chatHistory,saveChat,get_chats
 from controllers.userHandler import createUser,userLogin,getHistory
-from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt,GetHistory
+from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt,GetHistory   
 import os
+from typing import List, Dict
+import json
+from websocket_manager import manager
 
 app = FastAPI()
 
@@ -111,3 +114,12 @@ def getChatHistory(historyId : int):
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:
         return JSONResponse(content={"success" : True, "chats" : response[1]})
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
