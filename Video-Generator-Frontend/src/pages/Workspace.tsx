@@ -6,6 +6,7 @@ import axios from 'axios';
 import { BACKEND_URL } from '../lib/utils';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { AgentLogs } from '../components/AgentLogs';
 
 interface HistoryItem {
   id: string;
@@ -120,7 +121,7 @@ export function Workspace() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex">
         <AnimatePresence>
           {isSidebarOpen && (
             <motion.aside
@@ -137,6 +138,10 @@ export function Workspace() {
                     <div
                       key={item.id}
                       className="p-3 rounded-lg border bg-card hover:bg-accent transition-colors cursor-pointer"
+                      onClick={() => {
+                        setCurrChat(item);
+                        setIsNewChat(false);
+                      }}
                     >
                       <h3 className="font-medium">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">{item.timestamp}</p>
@@ -148,7 +153,7 @@ export function Workspace() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex">
           <div className="w-1/2 overflow-auto p-6">
             <div className="max-w-3xl mx-auto space-y-6">
               <div className="rounded-lg border bg-card p-4">
@@ -169,13 +174,7 @@ export function Workspace() {
                 </div>
               </div>
 
-              <div className="rounded-lg border bg-card p-4">
-                <h3 className="text-lg font-semibold mb-4">Assistant Response</h3>
-                <p className="text-muted-foreground">
-                  I’ll help you create an animation based on your prompt. The generated code and preview will appear in
-                  the right panel.
-                </p>
-              </div>
+              <AgentLogs userId={userId} className="mt-6" />
             </div>
           </div>
 
@@ -226,8 +225,8 @@ export function Workspace() {
               </div>
             </aside>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
 
       <footer className="h-12 border-t flex items-center justify-center text-sm text-muted-foreground">
         Created by Yashwanth S — Made with ❤️ for the users.
