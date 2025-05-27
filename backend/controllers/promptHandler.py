@@ -10,6 +10,40 @@ from prisma import Prisma
 from prisma.errors import PrismaError
 from prisma.enums import Role
 from websocket_manager import manager
+import boto3
+from botocore.exceptions import ClientError
+import glob
+from dotenv import load_dotenv
+
+load_dotenv()
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION')
+)
+
+BUCKET_NAME = 'maven-video-repo'
+
+async def upload_to_s3(class_name: str) -> tuple[bool, str]:
+    try:
+        media_dir = os.path.join("C:\\Documents\\Projects\\MAVEN\\backend\\media\\videos", class_name, "480p15")
+        video_file = os.path.join(media_dir, f"{class_name}.mp4")
+        
+        if not os.path.exists(video_file):
+            return False, "No video file found"
+            
+        s3_key = f"videos/{class_name}/{os.path.basename(video_file)}"
+        s3_client.upload_file(video_file, BUCKET_NAME, s3_key)
+        
+        url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
+        return True, url
+    except ClientError as e:
+        return False, f"S3 upload error: {str(e)}"
+    except Exception as e:
+        return False, f"Error: {str(e)}"
+
 
 async def emit_agent_log(user_id: int, sender: str, message: str):
     await manager.broadcast_to_user(user_id, {
@@ -76,7 +110,17 @@ async def handle_user_query_new_chat(data : UserPrompt):
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             print("Video generated successfully.")
             await emit_agent_log(user_id, "System", "Video generated successfully.")
+            
+            upload_success, upload_result = await upload_to_s3(class_name)
+            print("This is the upload result ", upload_result)
+            if not upload_success:
+                await emit_agent_log(user_id, "System", f"Failed to upload video: {upload_result}")
+                return [False, upload_result]
+                
+            video_url = upload_result
+            await emit_agent_log(user_id, "System", f"Video uploaded successfully to S3")
             success = True
+            
         except subprocess.CalledProcessError as e:
             print("Error in subprocess:", e.stderr)
             await emit_agent_log(user_id, "System", f"Error: {e.stderr}")
@@ -109,10 +153,11 @@ async def handle_user_query_new_chat(data : UserPrompt):
         "title" : class_name,
         "timestamp" : datetime.utcnow().isoformat() + 'z'
     }
-    response =await create_chatHistory(HistoryCreate(**newHistoryPayload))
+    response = await create_chatHistory(HistoryCreate(**newHistoryPayload))
     if response[0] == False:
         return response
-    historyId= response[1].id
+    historyId = response[1].id
+    
     chatPayload = {
         "role" : "User",
         "content" : prompt,
@@ -121,15 +166,16 @@ async def handle_user_query_new_chat(data : UserPrompt):
     chat = await saveChat(SaveChat(**chatPayload))
     if chat[0] == False:
         return chat
+
     chatPayload = {
         "role" : "AIAssistant",
         "content" : cleaned_code,
-        "historyId" : historyId
+        "historyId" : historyId,
+        "videoUrl" : video_url
     }
-    chat =await saveChat(SaveChat(**chatPayload))
+    chat = await saveChat(SaveChat(**chatPayload))
     if chat[0] == False:
         return chat
-    # DB Interactions ends..
 
     newHistory = {
         "id" : response[1].id,
@@ -137,7 +183,7 @@ async def handle_user_query_new_chat(data : UserPrompt):
         "timestamp" : response[1].timestamp.isoformat()
     }
 
-    return [True,cleaned_code,newHistory]
+    return [True, cleaned_code, newHistory]
 
 
 async def handle_user_query_old(data : UserPrompt):
@@ -201,7 +247,16 @@ async def handle_user_query_old(data : UserPrompt):
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             print("Video generated successfully.")
             await emit_agent_log(user_id, "System", "Video generated successfully.")
+
+            upload_success, upload_result = await upload_to_s3(class_name)
+            if not upload_success:
+                await emit_agent_log(user_id, "System", f"Failed to upload video: {upload_result}")
+                return [False, upload_result]
+                
+            video_url = upload_result
+            await emit_agent_log(user_id, "System", f"Video uploaded successfully to S3")
             success = True
+            
         except subprocess.CalledProcessError as e:
             print("Error in subprocess:", e.stderr)
             await emit_agent_log(user_id, "System", f"Error: {e.stderr}")
@@ -226,8 +281,21 @@ async def handle_user_query_old(data : UserPrompt):
             cleaned_code = re.sub(r"```python\n|\n```", "", corrected_response).strip()
             cleaned_code = re.sub(r"manim -pql \S+\.py \S+", "", cleaned_code).strip()
             
-    queue_response = await queue_old_chat_operations(data.historyId, prompt, cleaned_code)
+    chatPayloadUser = {
+        "role" : "User",
+        "content" : prompt,
+        "historyId" : data.historyId
+    }
+
+    chatPayloadAI = {
+        "role" : "AIAssistant",
+        "content" : cleaned_code,
+        "historyId" : data.historyId,
+        "videoUrl" : video_url
+    }
+
+    queue_response = await queue_old_chat_operations(SaveChat(**chatPayloadUser), SaveChat(**chatPayloadAI))
     if queue_response[0] == False:
         return queue_response
-
+    
     return [True, cleaned_code]

@@ -23,6 +23,7 @@ class SaveChat(BaseModel):
     role : Literal["User","AIAssistant"]
     content : str
     historyId : int
+    videoUrl : Optional[str] = None
 
 class UserLogin(BaseModel):
     email : str

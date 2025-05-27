@@ -2,7 +2,7 @@ from schemas import UserCreate,UserLogin,GetHistory
 from prisma import Prisma
 from prisma.errors import PrismaError
 
-async def createUser (user : UserCreate):
+async def createUser(user : UserCreate):
     try:
         async with Prisma() as db:
             await db.user.create(

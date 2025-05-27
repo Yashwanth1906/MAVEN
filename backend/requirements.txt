@@ -8,3 +8,4 @@ dotenv
 ag2[openai]
 prisma
 redis
+boto3

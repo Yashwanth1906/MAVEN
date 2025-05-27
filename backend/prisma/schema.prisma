@@ -28,6 +28,7 @@ model Chat {
   id         Int      @id @default(autoincrement()) @unique
   role       Role
   content    String
+  videoUrl   String?
   historyId  Int
   history    History  @relation(fields: [historyId], references: [id], onDelete: Cascade)
 }

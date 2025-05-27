@@ -27,14 +27,14 @@ async def create_chatHistory(chatHistory: HistoryCreate):
             if not user:
                 print(f"User with id {chatHistory.userId} not found")
                 return [False, f"User not found with id: {chatHistory.userId}"]
-            
             history = await db.history.create(
                 data={
                     "userId": chatHistory.userId,
                     "title": chatHistory.title,
-                    "timestamp": datetime.utcnow()
+                    "timestamp": datetime.utcnow(),
                 }
             )
+            print("History : ", history)
             return [True, history]
     except PrismaError as e:
         print("Prisma error in create_chatHistory:", str(e))
@@ -54,9 +54,11 @@ async def saveChat(chat: SaveChat):
                 data={
                     "role": Role[chat.role],
                     "content": chat.content,
-                    "historyId": chat.historyId
+                    "historyId": chat.historyId,
+                    "videoUrl" : chat.videoUrl
                 }
             )
+            print("Saved Chat : ", saved_chat)
             return [True, saved_chat]
     except PrismaError as e:
         print("Prisma error in saveChat:", str(e))
@@ -65,31 +67,31 @@ async def saveChat(chat: SaveChat):
         print("Unexpected error in saveChat:", str(e))
         return [False, f"Unexpected Error: {str(e)}"]
 
-async def queue_create_history(chatHistory: HistoryCreate):
-    try:
-        data = chatHistory.model_dump()
-        operation = {
-            'type': 'create_history',
-            'data': data
-        }
-        redis_client.lpush(QUEUE_NAME, json.dumps(operation, default=serialize_datetime))
-        return [True, "Operation queued successfully"]
-    except Exception as e:
-        print(f"Redis error in queue_create_history: {e}")
-        return [False, f"Queue Error: {str(e)}"]
+# async def queue_create_history(chatHistory: HistoryCreate):
+#     try:
+#         data = chatHistory.model_dump()
+#         operation = {
+#             'type': 'create_history',
+#             'data': data
+#         }
+#         redis_client.lpush(QUEUE_NAME, json.dumps(operation, default=serialize_datetime))
+#         return [True, "Operation queued successfully"]
+#     except Exception as e:
+#         print(f"Redis error in queue_create_history: {e}")
+#         return [False, f"Queue Error: {str(e)}"]
 
-async def queue_save_chat(chat: SaveChat):
-    try:
-        data = chat.model_dump()
-        operation = {
-            'type': 'save_chat',
-            'data': data
-        }
-        redis_client.lpush(QUEUE_NAME, json.dumps(operation, default=serialize_datetime))
-        return [True, "Operation queued successfully"]
-    except Exception as e:
-        print(f"Redis error in queue_save_chat: {e}")
-        return [False, f"Queue Error: {str(e)}"]
+# async def queue_save_chat(chat: SaveChat):
+#     try:
+#         data = chat.model_dump()
+#         operation = {
+#             'type': 'save_chat',
+#             'data': data
+#         }
+#         redis_client.lpush(QUEUE_NAME, json.dumps(operation, default=serialize_datetime))
+#         return [True, "Operation queued successfully"]
+#     except Exception as e:
+#         print(f"Redis error in queue_save_chat: {e}")
+#         return [False, f"Queue Error: {str(e)}"]
 
 async def get_chats(historyId : int):
     try:
@@ -116,15 +118,15 @@ async def get_chats(historyId : int):
         print(f"Unexpected error in get_chats: {e}")
         return [False, f"Unexpected Error: {str(e)}"]
 
-async def queue_old_chat_operations(historyId: int, prompt: str, cleaned_code: str):
+async def queue_old_chat_operations(chatPayLoadUser : SaveChat, chatPayLoadAI : SaveChat):
     try:
-        print(f"Queueing operations for history {historyId}")
+        print(f"Queueing operations for history {chatPayLoadUser.historyId}")
         user_chat_operation = {
             'type': 'save_chat',
             'data': {
                 'role': 'User',
-                'content': prompt,
-                'historyId': historyId
+                'content': chatPayLoadUser.content,
+                'historyId': chatPayLoadUser.historyId
             }
         }
         redis_client.lpush(QUEUE_NAME, json.dumps(user_chat_operation, default=serialize_datetime))
@@ -133,8 +135,9 @@ async def queue_old_chat_operations(historyId: int, prompt: str, cleaned_code: s
             'type': 'save_chat',
             'data': {
                 'role': 'AIAssistant',
-                'content': cleaned_code,
-                'historyId': historyId
+                'content': chatPayLoadAI.content,
+                'historyId': chatPayLoadAI.historyId,
+                'videoUrl' : chatPayLoadAI.videoUrl
             }
         }
         redis_client.lpush(QUEUE_NAME, json.dumps(ai_chat_operation, default=serialize_datetime))
