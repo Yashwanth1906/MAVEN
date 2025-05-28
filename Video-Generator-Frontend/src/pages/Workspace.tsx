@@ -19,6 +19,7 @@ interface ChatMessage {
   sender: string;
   content: string;
   timestamp: string;
+  videoUrl?: string;
 }
 
 interface WebSocketMessage {
@@ -252,12 +253,13 @@ export function Workspace() {
                       <div
                         key={item.id}
                         className="p-3 rounded-lg border bg-card hover:bg-accent transition-colors cursor-pointer"
-                        onClick={() => {
+                        onClick={async() => {
                           setCurrChat(item);
                           setIsNewChat(false);
                           setMessages([]);
-                          axios.get<ChatResponse>(`${BACKEND_URL}/api/chat/${item.id}`)
+                          await axios.get<ChatResponse>(`${BACKEND_URL}/api/users/getchat/${item.id}`)
                             .then(res => {
+                              console.log(res.data);
                               setMessages(res.data.messages);
                               setCurrentVideoUrl(res.data.videoUrl);
                             })
@@ -312,6 +314,7 @@ export function Workspace() {
                       sender={message.sender}
                       content={message.content}
                       timestamp={message.timestamp}
+                      videoUrl={message.videoUrl}
                     />
                   ))}
                   {currentVideoUrl && (

@@ -117,6 +117,20 @@ async def get_chats(historyId : int):
     except Exception as e:
         print(f"Unexpected error in get_chats: {e}")
         return [False, f"Unexpected Error: {str(e)}"]
+    
+
+async def getHistoryChat(historyId : int):
+    try:
+        async with Prisma() as db:
+            chats = await db.chat.find_many(where={"historyId" : historyId})
+            chat_dicts = [chat.dict() for chat in chats]
+            return [True, chat_dicts]
+    except PrismaError as e:
+        print(f"Prisma error : {e}")
+        return [False, f"Database Error : {str(e)}"]
+    except Exception as e:
+        print(f"Unexpected error in get_chats: {e}")
+        return [False, f"Unexpected Error: {str(e)}"]
 
 async def queue_old_chat_operations(chatPayLoadUser : SaveChat, chatPayLoadAI : SaveChat):
     try:

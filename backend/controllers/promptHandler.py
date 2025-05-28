@@ -183,7 +183,7 @@ async def handle_user_query_new_chat(data : UserPrompt):
         "timestamp" : response[1].timestamp.isoformat()
     }
 
-    return [True, cleaned_code, newHistory]
+    return [True, cleaned_code, newHistory, video_url]
 
 
 async def handle_user_query_old(data : UserPrompt):
@@ -298,4 +298,4 @@ async def handle_user_query_old(data : UserPrompt):
     if queue_response[0] == False:
         return queue_response
     
-    return [True, cleaned_code]
+    return [True, cleaned_code, video_url]

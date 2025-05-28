@@ -3,13 +3,14 @@ from fastapi.responses import JSONResponse,FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from controllers.promptHandler import handle_user_query_new_chat,handle_user_query_old
 from prisma import Prisma
-from controllers.chatHIstoryHandler import create_chatHistory,saveChat,get_chats
+from controllers.chatHIstoryHandler import create_chatHistory,saveChat, getHistoryChat
 from controllers.userHandler import createUser,userLogin,getHistory
 from schemas import UserCreate,HistoryCreate,SaveChat,UserLogin,UserPrompt,GetHistory   
 import os
 from typing import List, Dict
 import json
 from websocket_manager import manager
+from datetime import datetime
 
 app = FastAPI()
 
@@ -108,12 +109,28 @@ def get_video_preview(filename: str):
     return FileResponse(file_path, media_type="video/mp4")
 
 @app.get("/api/users/getchat/{historyId}")
-def getChatHistory(historyId : int):
-    response = get_chats(historyId)
+async def getChatHistory(historyId : int):
+    response = await getHistoryChat(historyId)
     if response[0] == False:
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:
-        return JSONResponse(content={"success" : True, "chats" : response[1]})
+        transformed_chats = []
+        for chat in response[1]:
+            chat_data = {
+                "sender": chat["role"],
+                "content": chat["content"],
+                "timestamp": chat.get("createdAt", datetime.utcnow().isoformat())
+            }
+            if chat.get("videoUrl"):
+                chat_data["videoUrl"] = chat["videoUrl"]
+
+            transformed_chats.append(chat_data)
+        
+        return JSONResponse(content={
+            "success": True,
+            "messages": transformed_chats,
+            "videoUrl": None
+        })
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
