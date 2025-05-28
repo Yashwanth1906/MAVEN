@@ -3,11 +3,12 @@ import { Menu, Share2, User, Code2, X, Send, PlayCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { BACKEND_URL } from '../lib/utils';
 import { ChatMessage } from '../components/ChatMessage';
 import { cn } from '../lib/utils';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Dialog, DialogContent } from '../components/ui/dialog';
+
+const BACKEND_URL = import.meta.env.VITE_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 interface HistoryItem {
   id: string;
