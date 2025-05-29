@@ -49,14 +49,6 @@ export function Workspace() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const handleWebSocketMessage = (data: WebSocketMessage) => {
     if (data.type === 'agent_log') {
       setMessages(prev => {
@@ -80,11 +72,7 @@ export function Workspace() {
   };
 
   const generateVideoForNewPrompt = async () => {
-    setMessages([{ 
-      sender: 'User', 
-      content: prompt,
-      timestamp: new Date().toISOString()
-    }]);
+    setPrompt('');
     await axios
       .post(`${BACKEND_URL}/api/userprompt`, {
         prompt: prompt,
@@ -105,11 +93,12 @@ export function Workspace() {
   };
 
   const modifyVideo = async () => {
-    setMessages(prev => [...prev, { 
-      sender: 'User', 
-      content: prompt,
-      timestamp: new Date().toISOString()
-    }]);
+    // setMessages(prev => [...prev, { 
+    //   sender: 'User', 
+    //   content: prompt,
+    //   timestamp: new Date().toISOString()
+    // }]);
+    setPrompt("");
     await axios
       .post(`${BACKEND_URL}/api/userprompt`, {
         prompt: prompt,
@@ -152,6 +141,14 @@ export function Workspace() {
         alert(err.message);
       });
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     let id = localStorage.getItem('userId');

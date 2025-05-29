@@ -87,10 +87,10 @@ async def process_user_query (prompt : UserPrompt = Body(...)):
     if response[0] == False:
         return JSONResponse(content={"success" : False, "error" : response[1]})
     else:
-        if len(response) == 3:
-            print(response[2])
-            return JSONResponse(content={"success" : True,"message" : response[1],"history" : response[2]})
-        return JSONResponse(content={"success" : True, "message" : response[1]})
+        if len(response) == 4:
+            # print(response[2])
+            return JSONResponse(content={"success" : True,"message" : response[1],"history" : response[2], "videoUrl" : response[3]})
+        return JSONResponse(content={"success" : True, "message" : response[1], "videoUrl" : response[2]})
     
 @app.post("/api/users/gethistory")
 async def get_history(req : GetHistory = Body(...)):

@@ -18,13 +18,21 @@ CodeModifying_Agent = AssistantAgent(
         - Do NOT remove or break unrelated parts of the original animation.
         - Maintain clean, readable formatting and good variable naming.
 
+        CRITICAL CONSTRAINTS:
+        -------------
+        - Use ONLY core Manim Community Edition (v0.18 or later) without any third-party dependencies.
+        - Do NOT use external SVGs, images, or assets that require imports.
+        - Implement all visual elements using Manim's built-in shapes and primitives.
+        - If a feature requires external libraries, implement it using core Manim functionality instead.
+        - Do NOT use any imports except from manim and standard library.
+
         Guidelines:
         -------------
-        - Use the latest Manim Community Edition API (v0.18 or later).
         - Keep all animations inside the `construct` method of a `Scene` subclass.
         - Use valid Manim color constants (e.g., BLUE, GREEN, RED, LIGHT_GRAY).
         - Use `.move_to()`, `LEFT`, `UP`, etc. for positioning.
         - Avoid markdown, explanation, or extra text.
+        - Use only built-in Manim shapes and primitives for all visual elements.
 
         Output Format:
         -------------
