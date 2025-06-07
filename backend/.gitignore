@@ -6,3 +6,4 @@ manimcode
 .cache
 generated
 prisma/migrations
+linuxvenv
