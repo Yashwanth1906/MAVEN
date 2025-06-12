@@ -1,6 +1,7 @@
 from schemas import UserCreate,UserLogin,GetHistory
 from prisma import Prisma
 from prisma.errors import PrismaError
+from datetime import datetime
 
 async def createUser(user : UserCreate):
     try:
@@ -24,12 +25,27 @@ async def userLogin(user : UserLogin):
                     "email" : user.email
                 }
             )
-            if not existingUser:
-                return [False,"User with that email Doesn't exists"]
-            if existingUser.password == user.password:
-                return [True,"User Logged In"]
-            else:
-                return [False, "Password Doesn't matches"]
+        if not existingUser:
+            async with Prisma() as db:
+                newUser = await db.user.create(
+                    data = {
+                        "email" : user.email,
+                        "name" : user.name,
+                        "isGoogleUser" : user.isGoogleUser,
+                    }
+                )
+            return [True, {"userId" : newUser.id, "name" : user.name, "email" : newUser.email}]
+        else:
+            async with Prisma() as db:
+                loginUser = await db.user.update(
+                    where={
+                        "email": user.email
+                    },
+                    data={
+                        "lastLogin": datetime.now()
+                    }
+                )
+            return [True, {"userId" : loginUser.id, "name" : loginUser.name, "email" : loginUser.email}]
     except PrismaError as e:
         print(f"Prisma error : {e}")
         return [False, f"Database Error : {str(e)}"]

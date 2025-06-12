@@ -127,6 +127,7 @@ export function Workspace() {
 
   const getHistory = async () => {
     let userId = localStorage.getItem('userId');
+    console.log("User Id : ", userId);
     if (userId === null) {
       userId = '5';
     }

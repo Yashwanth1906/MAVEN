@@ -27,7 +27,8 @@ class SaveChat(BaseModel):
 
 class UserLogin(BaseModel):
     email : str
-    password : str
+    name : str
+    isGoogleUser : bool = False
 
 class UserPrompt(BaseModel):
     prompt : str

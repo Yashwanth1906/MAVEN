@@ -10,8 +10,12 @@ datasource db {
 model User {
   id       Int       @id @default(autoincrement()) @unique
   name     String
-  email    String
-  password String
+  email    String @unique
+  password String?
+  isGoogleUser Boolean? @default(false)
+  createdAt DateTime? @default(now())
+  isLoggedIn Boolean? @default(true)
+  lastLogin DateTime? @default(now())
   history  History[]
 }
 
