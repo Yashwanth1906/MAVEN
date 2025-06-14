@@ -7,9 +7,8 @@ import { Footer } from '../components/footer';
 import { useGoogleLogin, googleLogout  } from '@react-oauth/google';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BACKEND_URL } from '../lib/utils';
 import axios from "axios"
-
+const BACKEND_URL = import.meta.env.VITE_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 export function Home() {
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
