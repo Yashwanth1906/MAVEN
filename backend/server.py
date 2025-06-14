@@ -132,6 +132,7 @@ async def getChatHistory(historyId : int):
             "videoUrl": None
         })
 
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     await manager.connect(websocket, user_id)

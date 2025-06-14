@@ -7,6 +7,8 @@ import { ChatMessage } from '../components/ChatMessage';
 import { cn } from '../lib/utils';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Dialog, DialogContent } from '../components/ui/dialog';
+import {  googleLogout  } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -36,6 +38,7 @@ interface ChatResponse {
 }
 
 export function Workspace() {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -48,6 +51,7 @@ export function Workspace() {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
   const handleWebSocketMessage = (data: WebSocketMessage) => {
     if (data.type === 'agent_log') {
@@ -93,11 +97,6 @@ export function Workspace() {
   };
 
   const modifyVideo = async () => {
-    // setMessages(prev => [...prev, { 
-    //   sender: 'User', 
-    //   content: prompt,
-    //   timestamp: new Date().toISOString()
-    // }]);
     setPrompt("");
     await axios
       .post(`${BACKEND_URL}/api/userprompt`, {
@@ -147,6 +146,12 @@ export function Workspace() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const logOut = () => {
+    googleLogout();
+    localStorage.removeItem("userId");
+    navigate("/");
+  }
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -154,6 +159,7 @@ export function Workspace() {
   useEffect(() => {
     let id = localStorage.getItem('userId');
     if (id !== null) {
+      setLoggedIn(true);
       setUserId(id);
     }
     getHistory();
@@ -162,7 +168,6 @@ export function Workspace() {
   useEffect(() => {
     const connectWebSocket = () => {
       const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
-
       ws.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
@@ -227,10 +232,10 @@ export function Workspace() {
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button size="sm">
-            <User className="h-4 w-4 mr-2" />
-            Sign In
-          </Button>
+          {loggedIn && <Button size="sm" onClick={()=> logOut()}>
+            {/* <User className="h-4 w-4 mr-2" /> */}
+            Log Out
+          </Button>}
         </div>
       </header>
 

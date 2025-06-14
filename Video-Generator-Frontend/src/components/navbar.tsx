@@ -5,13 +5,13 @@ import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useGoogleLogin } from '@react-oauth/google';
 import axios from "axios"
 import { BACKEND_URL } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
-export function Navbar() {
+export function Navbar({loggedIn, loginWithGoogle , logOut} : {loggedIn : boolean, loginWithGoogle : () => void , logOut : ()=> void}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const navigate = useNavigate();
   useEffect(() => {
     const handleScroll = () => {
@@ -29,38 +29,7 @@ export function Navbar() {
     { name: "Demo", href: "/#demo" },
   ];
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async tokenResponse => {
-      console.log("Login Success", tokenResponse);
-      const userInfo : any = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.access_token}`,
-        }
-      });
-      if(userInfo !== undefined) {
-        console.log("User Info: ", userInfo.data)
-        const login : any = await axios.post(`${BACKEND_URL}/api/users/login`, {
-          "name" : userInfo.data.name,
-          "email" : userInfo.data.email,
-          "isGoogleUser" : true
-        })
-        if(login.data.success === true) {
-          const name = login.data.message.name;
-          const email = login.data.message.email;
-          const userId = login.data.message.userId;
-          localStorage.setItem("userId", userId);
-          localStorage.setItem("name", name);
-          localStorage.setItem("email", email);
-          navigate("/maven");
-        } else {
-          alert("Login Unsuccessfull")
-        }
-      }
-    },
-    onError: () => {
-      console.log("Login Failed");  
-    },
-  })
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -96,9 +65,10 @@ export function Navbar() {
             <Button asChild>
               <Link to="/maven">Try Now</Link>
             </Button>
-            <Button onClick={loginWithGoogle} className="hidden md:inline-flex">
+            {!loggedIn ? <Button onClick={loginWithGoogle} className="hidden md:inline-flex">
                 Login with Google
-            </Button>
+            </Button> : <Button onClick={logOut}>
+              Log Out</Button>}
           </nav>
           {/* <GoogleLogin
               onSuccess={credentialResponse => {

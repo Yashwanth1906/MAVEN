@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export function HeroSection() {
+export function HeroSection({loggedIn, loginWithGoogle} : {loggedIn : boolean, loginWithGoogle : ()=> void}) {
   return (
     <section 
       id="home" 
@@ -29,10 +29,12 @@ export function HeroSection() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild className="text-base font-medium">
+              {loggedIn ? <Button size="lg" asChild className="text-base font-medium">
                 <Link to="/maven">Try Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button> : <Button size="lg" asChild className="text-base font-medium" onClick={loginWithGoogle}>
+                <p>Login to Try</p>
               </Button>
-              
+              }
               <Button size="lg" variant="outline" className="text-base font-medium">
                 Learn More
               </Button>
