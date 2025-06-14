@@ -14,8 +14,13 @@ import boto3
 from botocore.exceptions import ClientError
 import glob
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+MANIM_CODE_DIR = os.getenv('MANIM_CODE_DIR', os.path.join(BASE_DIR, 'manimcode'))
+MEDIA_DIR = os.getenv('MEDIA_DIR', os.path.join(BASE_DIR, 'media', 'videos'))
 
 s3_client = boto3.client(
     's3',
@@ -28,7 +33,7 @@ BUCKET_NAME = 'maven-video-repo'
 
 async def upload_to_s3(class_name: str) -> tuple[bool, str]:
     try:
-        media_dir = os.path.join("C:\\Documents\\Projects\\MAVEN\\backend\\media\\videos", class_name, "480p15")
+        media_dir = os.path.join(MEDIA_DIR, class_name, "480p15")
         video_file = os.path.join(media_dir, f"{class_name}.mp4")
         
         if not os.path.exists(video_file):
@@ -94,9 +99,9 @@ async def handle_user_query_new_chat(data : UserPrompt):
         return [None, None]
     class_name = class_name_match.group(1)
     cleaned_code = re.sub(r"manim -pql \S+\.py \S+", "", cleaned_code).strip()
-    file_dir = "C:\\Documents\\Projects\\MAVEN\\Backend\\manimcode"
-    os.makedirs(file_dir, exist_ok=True)
-    file_path = os.path.join(file_dir, f"{class_name}.py")
+    
+    os.makedirs(MANIM_CODE_DIR, exist_ok=True)
+    file_path = os.path.join(MANIM_CODE_DIR, f"{class_name}.py")
     
     success = False
     max_retries = 5
@@ -105,7 +110,7 @@ async def handle_user_query_new_chat(data : UserPrompt):
     while not success and retries < max_retries:
         with open(file_path, "w") as manim_file:
             manim_file.write(cleaned_code)
-        command = f"manim -pql manimcode\\{class_name}.py {class_name}"
+        command = f"manim -pql {os.path.relpath(file_path)} {class_name}"
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             print("Video generated successfully.")
@@ -231,9 +236,9 @@ async def handle_user_query_old(data : UserPrompt):
         return [None, None]
     class_name = class_name_match.group(1)
     cleaned_code = re.sub(r"manim -pql \S+\.py \S+", "", cleaned_code).strip()
-    file_dir = "C:\\Documents\\Projects\\MAVEN\\Backend\\manimcode"
-    os.makedirs(file_dir, exist_ok=True)
-    file_path = os.path.join(file_dir, f"{class_name}.py")
+    
+    os.makedirs(MANIM_CODE_DIR, exist_ok=True)
+    file_path = os.path.join(MANIM_CODE_DIR, f"{class_name}.py")
     
     success = False
     max_retries = 5
@@ -242,7 +247,7 @@ async def handle_user_query_old(data : UserPrompt):
     while not success and retries < max_retries:
         with open(file_path, "w") as manim_file:
             manim_file.write(cleaned_code)
-        command = f"manim -pql manimcode\\{class_name}.py {class_name}"
+        command = f"manim -pql {os.path.relpath(file_path)} {class_name}"
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             print("Video generated successfully.")
